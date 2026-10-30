@@ -1,0 +1,86 @@
+EXPERIMENT 08
+Title: Memory Allocation and Usage in C
+
+AIM
+Allocate memory dynamically, observe process memory usage, and release the allocation with free.
+
+SETUP
+Ubuntu with GCC, a terminal, and top or ps. Start with a small allocation such as 16 MB that comfortably fits available memory.
+
+PRACTICAL TASKS
+1. Compile the program with warnings enabled.
+2. Allocate 16 MB and leave the program waiting for Enter.
+3. In a second terminal, inspect its VSZ and RSS with ps or top.
+4. Press Enter once and observe the release message and process exit.
+5. Repeat with another small size and compare memory usage.
+6. Check that zero, negative, nonnumeric, and overflowing sizes are rejected.
+
+OBSERVATION NOTE
+The process exits immediately after free, so this exercise shows the release message and process termination rather than a stable post-free RSS measurement.
+
+PROGRAM 1: memory-allocation.c
+
+The runnable source is provided in memory-allocation.c.
+
+#include <ctype.h>
+#include <errno.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <memory_in_MB>\n", argv[0]);
+        return 1;
+    }
+
+    for (const char *p = argv[1]; *p; ++p) {
+        if (!isdigit((unsigned char)*p)) {
+            fprintf(stderr, "Please enter a positive whole number of MB.\n");
+            return 1;
+        }
+    }
+    char *end;
+    errno = 0;
+    unsigned long long mb = strtoull(argv[1], &end, 10);
+    const size_t bytes_per_mb = 1024u * 1024u;
+    if (errno || end == argv[1] || *end || mb == 0 ||
+        mb > SIZE_MAX / bytes_per_mb) {
+        fprintf(stderr, "Please enter a positive memory size that fits this system.\n");
+        return 1;
+    }
+
+    size_t size = (size_t)mb * bytes_per_mb;
+    volatile unsigned char *ptr = malloc(size);
+    if (ptr == NULL) {
+        fprintf(stderr, "Memory allocation failed.\n");
+        return 1;
+    }
+
+    // Touch every byte so the allocation is reflected in resident memory.
+    for (size_t i = 0; i < size; ++i) ptr[i] = 0;
+
+    printf("%llu MB memory allocated successfully (1 MB = 1024 x 1024 bytes).\n", mb);
+    printf("Press Enter to release memory...");
+    fflush(stdout);
+    getchar();
+    free((void *)ptr);
+    printf("Memory released successfully.\n");
+    return 0;
+}
+
+HOW TO EXECUTE
+Run these commands from this lab folder:
+
+gcc -std=c11 -Wall -Wextra -Wpedantic memory-allocation.c -o memory-allocation
+./memory-allocation 16
+
+# While the program waits, open a second terminal:
+ps -C memory-allocation -o pid,comm,vsz,rss
+# Or inspect the process interactively:
+top
+
+The program uses 1 MB = 1024 × 1024 bytes (technically a MiB). It writes every byte before waiting so the allocation becomes resident. ps reports VSZ and RSS in KiB on Ubuntu; total usage also includes the program and libraries. Press Enter once in the first terminal to free memory and exit.
+
+OBSERVATIONS AND RESULT
+Record your actual output, observations, and conclusion after completing the experiment. Save supporting screenshots in screenshots/.

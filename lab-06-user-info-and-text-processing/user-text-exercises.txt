@@ -1,0 +1,130 @@
+EXPERIMENT 06
+Title: User Information and Text Processing
+
+AIM
+Display user information and login history, count lines, words, and characters, extract lines, search and replace text, and sort file contents.
+
+SETUP
+Ubuntu with Bash and the standard whoami, id, who, date, last, wc, sed, grep, and sort commands. Login history may be empty on a new system.
+
+PRACTICAL TASKS
+1. Display current username, user and group IDs, login sessions, and date.
+2. Display the five most recent login records.
+3. Count lines, words, and characters in the sample text.
+4. Extract the first, second, and third lines using sed.
+5. Search for Linux and display the matching line number.
+6. Display the result of replacing Linux with Ubuntu.
+7. Display sorted unique fruit names.
+8. Sort the fruit list alphabetically.
+
+EXPECTED SAMPLE COUNTS
+Lines: 3; words: 13; characters: 87 (including newlines).
+
+PROGRAM 1: login-history.sh
+
+The runnable source is provided in login-history.sh.
+
+#!/bin/bash
+
+printf 'Recent Login History:\n'
+last -n 5
+printf '\nCurrent User:\n'
+whoami
+
+PROGRAM 2: text-processing.sh
+
+The runnable source is provided in text-processing.sh.
+
+#!/bin/bash
+set -e
+
+# Temporary sample files keep repeated runs separate from your own files.
+practice_dir=$(mktemp -d)
+trap 'rm -rf -- "$practice_dir"' EXIT
+
+cat > "$practice_dir/sample.txt" <<'EOF'
+Linux is an operating system.
+Shell scripting is useful.
+Text processing is important.
+EOF
+filename="$practice_dir/sample.txt"
+
+printf 'File Contents:\n'
+cat "$filename"
+printf '\nNumber of Lines: '
+wc -l < "$filename"
+printf 'Number of Words: '
+wc -w < "$filename"
+printf 'Number of Characters: '
+wc -m < "$filename"
+
+printf '\nFirst line:\n'
+sed -n '1p' "$filename"
+printf '\nSecond line:\n'
+sed -n '2p' "$filename"
+printf '\nThird line:\n'
+sed -n '3p' "$filename"
+
+search_word="Linux"
+printf '\nSearching for the word: %s\n' "$search_word"
+if grep -n "$search_word" "$filename"; then
+    echo 'Search completed.'
+else
+    echo 'Word not found.'
+fi
+
+printf '\nOriginal Text:\n'
+cat "$filename"
+printf '\nModified Text:\n'
+sed 's/Linux/Ubuntu/g' "$filename"
+
+cat > "$practice_dir/duplicate.txt" <<'EOF'
+Apple
+Banana
+Apple
+Mango
+Banana
+Orange
+EOF
+printf '\nOriginal Lines:\n'
+cat "$practice_dir/duplicate.txt"
+printf '\nUnique Lines:\n'
+sort -u "$practice_dir/duplicate.txt"
+
+cat > "$practice_dir/fruits.txt" <<'EOF'
+Mango
+Apple
+Orange
+Banana
+EOF
+printf '\nOriginal File:\n'
+cat "$practice_dir/fruits.txt"
+printf '\nSorted File:\n'
+sort "$practice_dir/fruits.txt"
+
+PROGRAM 3: user-info.sh
+
+The runnable source is provided in user-info.sh.
+
+#!/bin/bash
+
+printf 'Current Username:\n'
+whoami
+printf '\nUser ID and Group ID:\n'
+id
+printf '\nCurrent Login Sessions:\n'
+who
+printf '\nCurrent Date and Time:\n'
+date
+
+HOW TO EXECUTE
+Run these commands from this lab folder:
+
+bash user-info.sh
+bash login-history.sh
+bash text-processing.sh
+
+The text-processing script creates temporary sample files and removes them on exit. The sed substitution displays modified text without changing the original sample.
+
+OBSERVATIONS AND RESULT
+Record your actual output, observations, and conclusion after completing the experiment. Save supporting screenshots in screenshots/.
